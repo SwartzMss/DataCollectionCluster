@@ -1,12 +1,6 @@
 #ifndef  _XLOGGER_H
 #define  _XLOGGER_H
 
-#include <log4cxx/logger.h>
-#include <log4cxx/logstring.h>
-#include <log4cxx/propertyconfigurator.h>
-
-using namespace log4cxx;
-using namespace log4cxx::helpers;
 
 #ifndef IN
 #define IN

@@ -1,5 +1,12 @@
 #include "xlogger.h"
 
+#include <log4cxx/logger.h>
+#include <log4cxx/logstring.h>
+#include <log4cxx/propertyconfigurator.h>
+
+using namespace log4cxx;
+using namespace log4cxx::helpers;
+
 #include <string>
 using namespace  std;
 

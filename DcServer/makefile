@@ -1,40 +1,46 @@
-CXXFLAGS = -g3 -O0 -w
+CXXFLAGS = -g3 -O0 -w -fPIC -std=c++11
 CXX = g++
 CC = gcc 
 
 BUILDDIR = ./src
-TARGET = $(BUILDDIR)/libutils.a
-TARGETDIR = ./install
+TARGET = $(BUILDDIR)/DcServer
+TARGETDIR = ./Bin
+LDFLAGS = -fPIC -shared
 
 SRC = $(wildcard src/*.c src/*.cpp src/*.cc)
 
 OBJS = $(patsubst %.cpp,%.o,$(SRC))   
 
-INCLUDES = -I./ -I./src
-LIBDIR = -lpthrea -ldl
+INCLUDES = -I./ -I./src -I../depend/libevent/include \
+	   -I../depend/rapidjson/include -I../depend/utils/include \
+	   -I../depend/xlogger/include
+
+LIBDIR = -lpthread -ldl -L../depend/libevent/lib -levent -levent_pthreads\
+	 -L../depend/xlogger/lib	 -lxlogger -L../depend/utils/lib -lutils
 
 
 all:$(TARGET)
 	
-	
 $(TARGET): $(OBJS)
-	ar cr   $(TARGET) $(OBJS)
+	$(CXX)   $(LIBDIR) -o $@ $^ 
 	
 %.o : %.cpp
-	$(CXX) -c $(CXXFLAGS) $< -o $@
+	$(CXX) $(INCLUDES) -c $(CXXFLAGS) $< -o $@
 
 %.o : %.c
-	$(CXX) -c $(CXXFLAGS) $< -o $@
+	$(CXX) $(INCLUDES) -c $(CXXFLAGS) $< -o $@
 
 %.o : %.cc
-	$(CXX) -c $(CXXFLAGS) $< -o $@
+	$(CXX) $(INCLUDES) -c $(CXXFLAGS) $< -o $@
 
 clean:
 	@rm -rvf $(OBJS) $(TARGET)
-	@rm -rf $(TARGETDIR)
+	@rm -rf $(TARGETDIR)/*
 
 install:$(TARGET)
-	install -d $(TARGETDIR)/lib
-	install -d $(TARGETDIR)/include
-	install -m 0755 $(TARGET)  $(TARGETDIR)/lib
-	install -m 0755 $(BUILDDIR)/*.h  $(TARGETDIR)/include
+	install -d $(TARGETDIR)
+	install -m 0755 $(TARGET)  $(TARGETDIR)
+	@install -m 0755 src/log4cxx.properties  $(TARGETDIR)
+	@install -m 0755 ../depend/xlogger/lib/lib*  $(TARGETDIR)
+	@install -m 0755 ../depend/utils/lib/*  $(TARGETDIR)
+	@install -m 0755 ../depend/libevent/lib/*  $(TARGETDIR)
