@@ -1,33 +1,34 @@
-CXXFLAGS = -g3 -O0 -w
+CXXFLAGS = -g3 -O0 -w -fPIC
 CXX = g++
 CC = gcc 
 
 BUILDDIR = ./src
-TARGET = $(BUILDDIR)/libutils.a
+TARGET = $(BUILDDIR)/libxlogger.so
 TARGETDIR = ./install
+LDFLAGS = -fPIC -shared
 
 SRC = $(wildcard src/*.c src/*.cpp src/*.cc)
 
 OBJS = $(patsubst %.cpp,%.o,$(SRC))   
 
-INCLUDES = -I./ -I./src
-LIBDIR = -lpthrea -ldl
+INCLUDES = -I./ -I./src -I./include
+LIBDIR = -lpthread -ldl -L./lib -llog4cxx 
 
 
 all:$(TARGET)
 	
 	
 $(TARGET): $(OBJS)
-	ar cr   $(TARGET) $(OBJS)
+	$(CXX)  $(LDFLAGS) $(LIBDIR) -o $@ $^ 
 	
 %.o : %.cpp
-	$(CXX) -c $(CXXFLAGS) $< -o $@
+	$(CXX) $(INCLUDES) -c $(CXXFLAGS) $< -o $@
 
 %.o : %.c
-	$(CXX) -c $(CXXFLAGS) $< -o $@
+	$(CXX) $(INCLUDES) -c $(CXXFLAGS) $< -o $@
 
 %.o : %.cc
-	$(CXX) -c $(CXXFLAGS) $< -o $@
+	$(CXX) $(INCLUDES) -c $(CXXFLAGS) $< -o $@
 
 clean:
 	@rm -rvf $(OBJS) $(TARGET)
@@ -37,4 +38,6 @@ install:$(TARGET)
 	install -d $(TARGETDIR)/lib
 	install -d $(TARGETDIR)/include
 	install -m 0755 $(TARGET)  $(TARGETDIR)/lib
-	install -m 0755 $(BUILDDIR)/*.h  $(TARGETDIR)/include
+	install -m 0755 $(BUILDDIR)/log4cxx.properties  $(TARGETDIR)/lib
+	install -m 0755 $(BUILDDIR)/xloggerDefine.h  $(TARGETDIR)/include
+	install -m 0755 $(BUILDDIR)/*.h  $(TARGETDIR)/include	

@@ -21,13 +21,13 @@ $(TARGET): $(OBJS)
 	ar cr   $(TARGET) $(OBJS)
 	
 %.o : %.cpp
-	$(CXX) -c $(CXXFLAGS) $< -o $@
+	$(CXX) $(INCLUDES) -c $(CXXFLAGS) $< -o $@
 
 %.o : %.c
-	$(CXX) -c $(CXXFLAGS) $< -o $@
+	$(CXX) $(INCLUDES) -c $(CXXFLAGS) $< -o $@
 
 %.o : %.cc
-	$(CXX) -c $(CXXFLAGS) $< -o $@
+	$(CXX) $(INCLUDES) -c $(CXXFLAGS) $< -o $@
 
 clean:
 	@rm -rvf $(OBJS) $(TARGET)
