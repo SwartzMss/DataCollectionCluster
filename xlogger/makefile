@@ -12,7 +12,7 @@ SRC = $(wildcard src/*.c src/*.cpp src/*.cc)
 OBJS = $(patsubst %.cpp,%.o,$(SRC))   
 
 INCLUDES = -I./ -I./src -I./include
-LIBDIR = -lpthread -ldl -L./lib -llog4cxx 
+LIBDIR = -lpthread -ldl -L./lib -Wl,-rpath=./,-rpath-link=./ -llog4cxx 
 
 
 all:$(TARGET)

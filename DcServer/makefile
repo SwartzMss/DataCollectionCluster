@@ -15,8 +15,8 @@ INCLUDES = -I./ -I./src -I../depend/libevent/include \
 	   -I../depend/rapidjson/include -I../depend/utils/include \
 	   -I../depend/xlogger/include
 
-LIBDIR = -lpthread -ldl -L../depend/libevent/lib -levent -levent_pthreads\
-	 -L../depend/xlogger/lib	 -lxlogger -L../depend/utils/lib -lutils
+LIBDIR = -Wl,-rpath=./ -lpthread -ldl -L../depend/libevent/lib -levent -levent_pthreads\
+	 -L../depend/xlogger/lib -llog4cxx -lxlogger -L../depend/utils/lib -lutils
 
 
 all:$(TARGET)

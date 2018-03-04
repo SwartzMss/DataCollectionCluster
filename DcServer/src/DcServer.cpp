@@ -1,7 +1,5 @@
 #include "DcServer.h"
-#include "DcLogDefine.h"
 
-#include <string>
 
 HttpServer::HttpServer(void) :
 m_hThread(NULL),
@@ -130,26 +128,23 @@ void HttpServer::WorkService(void* arg)
 {
 	http_task_t* task = (http_task_t*)arg;
 	const char* uri = (char*)evhttp_request_get_uri(task->request);
-	static int num = 0;
-	printf("accept request url:%s ,num= %d\n", uri,num++);
-	DC_INFO("accept request url:%s ,num= %d", uri,num++);
+	const char* host = evhttp_request_get_host(task->request);
+	printf("accept request host:%s , url:%s \n", host,uri);
+	DC_INFO("accept request host:%s, url:%s ", host,uri);
 
 	//增加http的头信息 ,默认json格式 .utf8编码格式
 	evhttp_add_header(evhttp_request_get_output_headers(task->request), "Content-Type", "application/json; charset=UTF-8");
 
-	SendReply(task, "Just Support The POST Request");
 
-#if 0
 	//目前只支持post请求
 	if (EVHTTP_REQ_POST != evhttp_request_get_command(task->request))
 	{
-		SendReply(task, "Just Support The POST Request", DAG_URL_ERR);
+		SendReply(task, "Just Support The POST Request", DC_URL_ERR);
 		return;
 	}
-#endif
 }
 
-void HttpServer::SendReply(http_task_t* task, string strMsg, int MsgType /*= 1*/)
+void HttpServer::SendReply(http_task_t* task, string strMsg, DC_HTTP_REPLY MsgType )
 {
 	struct evbuffer* evbuf = evbuffer_new();
 	if (!evbuf)
