@@ -2,46 +2,59 @@
 #define _DC_SERVER_H
 
 #include "DcDefine.h"
+#include "HttpServer.h"
 
-typedef enum
-{
-	DC_NO_ERR  = 0,
-	DC_URL_ERR = 1
-}DC_HTTP_REPLY;
+#include <thrift/protocol/TBinaryProtocol.h>
+#include <thrift/server/TNonblockingServer.h>
+#include <thrift/transport/TServerSocket.h>
+#include <thrift/concurrency/PosixThreadFactory.h>
+#include <thrift/concurrency/ThreadManager.h>
+#include <thrift/transport/TBufferTransports.h>
 
+#include "Regist.h"
 
-typedef struct http_task_t
-{
-	struct evhttp_request* request;
-	void* usrdata;
-}http_task_t;
+using namespace ::apache::thrift;
+using namespace ::apache::thrift::protocol;
+using namespace ::apache::thrift::transport;
+using namespace ::apache::thrift::server;
+using namespace ::apache::thrift::concurrency;
 
-class HttpServer
-{
+using boost::shared_ptr;
+
+using namespace  ::DcCluster;
+
+class RegistHandler : virtual public RegistIf {
 public:
-	HttpServer(void);
-	~HttpServer(void);
-	static void HttpCallback(struct evhttp_request* request, void* arg);
-	static void S_StartService(void* arg);
-	void StartService();
 
-	//回应报错消息格式
-	void SendReply(http_task_t* task, string strMsg, DC_HTTP_REPLY  MsgType = DC_NO_ERR);
+	RegistHandler()
+	{
+		
+	}
 
-	static  void* CALLBACK S_WorkService(void* arg);
-	void WorkService(void* arg);
+	RegistResult::type registClient(const ClientInfo& clientInfo) 
+	{
+		DC_INFO("Clinet register Ip = %s, port =%d ",clientInfo.Ip.c_str(),clientInfo.Port);
+		return RegistResult::SUCCESS;
+	}
 
-public:
-	int StartServer(int port);
-	void StopServer();
-public:
-	swartz_thread_pool_t* m_hThreadPool;		     //线程池的句柄
-
-private:
-	int            m_nport;					//端口号
-	swartz_thread_t* m_hThread;				//发送心跳的单独线程
-	struct evhttp* m_evhttp;
-	struct event_base *m_pBase;
+	bool heartbeat(const HeartBeatInfo& heartBeatInfo) 
+	{
+		DC_INFO("Clinet heartbeat Ip = %s, port =%d ",heartBeatInfo.Ip.c_str(),heartBeatInfo.Port);
+		return true;
+	}
 };
 
+
+
+class DcServer
+{
+public:
+	DcServer(void);
+	~DcServer(void);
+public:
+	int StartServer();
+	void StopServer();
+};
+
+typedef singleton<DcServer> DCServer;
 #endif

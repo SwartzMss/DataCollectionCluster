@@ -11,12 +11,13 @@ SRC = $(wildcard src/*.c src/*.cpp src/*.cc)
 
 OBJS = $(patsubst %.cpp,%.o,$(SRC))   
 
-INCLUDES = -I./ -I./src -I../depend/libevent/include \
+INCLUDES = -I./ -I./src -I../depend/libevent/include -I../depend/thrift/include \
 	   -I../depend/rapidjson/include -I../depend/utils/include \
 	   -I../depend/xlogger/include
 
 LIBDIR = -Wl,-rpath=./ -lpthread -ldl -L../depend/libevent/lib -levent -levent_pthreads\
-	 -L../depend/xlogger/lib -llog4cxx -lxlogger -L../depend/utils/lib -lutils
+	 -L../depend/xlogger/lib -llog4cxx -lxlogger -L../depend/utils/lib -lutils \
+	 -L../depend/thrift/lib -lthrift -l thriftnb -L../depend/openssl/lib -lssl -lcrypto	
 
 
 all:$(TARGET)
@@ -44,3 +45,5 @@ install:$(TARGET)
 	@install -m 0755 ../depend/xlogger/lib/lib*  $(TARGETDIR)
 	@install -m 0755 ../depend/utils/lib/*  $(TARGETDIR)
 	@install -m 0755 ../depend/libevent/lib/*  $(TARGETDIR)
+	@install -m 0755 ../depend/thrift/lib/*  $(TARGETDIR)
+	@install -m 0755 ../depend/openssl/lib/*  $(TARGETDIR)

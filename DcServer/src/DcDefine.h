@@ -35,8 +35,18 @@
 #include <string>
 
 using namespace rapidjson;
-using namespace std;
 
+typedef enum
+{     
+	DC_NO_ERR  = 0,
+	DC_URL_ERR = 1
+}DC_HTTP_REPLY;
+
+typedef struct http_task_t
+{
+	 struct evhttp_request* request;
+	 void* usrdata;
+}http_task_t;
 
 
 #endif
