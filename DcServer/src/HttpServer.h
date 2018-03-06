@@ -31,7 +31,6 @@ private:
 	struct evhttp* m_evhttp;
 	struct event_base *m_pBase;
 	swartz_thread_pool_t* m_hThreadPool;		     //线程池的句柄
-
 };
 
 typedef singleton<HttpServer> HTTPServer;

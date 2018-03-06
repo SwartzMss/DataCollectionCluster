@@ -1,5 +1,5 @@
 #include "HttpServer.h"
-
+#include "DcServer.h"
 
 HttpServer::HttpServer(void) :
 m_hThread(NULL),
@@ -128,9 +128,6 @@ void HttpServer::WorkService(void* arg)
 {
 	http_task_t* task = (http_task_t*)arg;
 	const char* uri = (char*)evhttp_request_get_uri(task->request);
-	const char* host = evhttp_request_get_host(task->request);
-	printf("accept request host:%s , url:%s \n", host,uri);
-	DC_INFO("accept request host:%s, url:%s ", host,uri);
 
 	//增加http的头信息 ,默认json格式 .utf8编码格式
 	evhttp_add_header(evhttp_request_get_output_headers(task->request), "Content-Type", "application/json; charset=UTF-8");
@@ -141,6 +138,15 @@ void HttpServer::WorkService(void* arg)
 	{
 		SendReply(task, "Just Support The POST Request", DC_URL_ERR);
 		return;
+	}
+	
+	if(strcmp(uri,DC_SERVICE)== SWARTZ_OK )
+	{
+		DCServer::Instance()->CollectWorkProc(task);
+	}
+	else
+	{
+		SendReply(task, "Not Support The Url Request", DC_URL_ERR);
 	}
 }
 

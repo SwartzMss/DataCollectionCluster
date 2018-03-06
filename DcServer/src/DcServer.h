@@ -23,27 +23,17 @@ using boost::shared_ptr;
 
 using namespace  ::DcCluster;
 
-class RegistHandler : virtual public RegistIf {
+
+class RegistHandler : virtual public RegistIf 
+{
 public:
+	RegistHandler(){}
 
-	RegistHandler()
-	{
-		
-	}
+	RegistResult::type registClient(const ClientInfo& clientInfo); 
+	
+	bool heartbeat(const HeartBeatInfo& heartBeatInfo); 
 
-	RegistResult::type registClient(const ClientInfo& clientInfo) 
-	{
-		DC_INFO("Clinet register Ip = %s, port =%d ",clientInfo.Ip.c_str(),clientInfo.Port);
-		return RegistResult::SUCCESS;
-	}
-
-	bool heartbeat(const HeartBeatInfo& heartBeatInfo) 
-	{
-		DC_INFO("Clinet heartbeat Ip = %s, port =%d ",heartBeatInfo.Ip.c_str(),heartBeatInfo.Port);
-		return true;
-	}
 };
-
 
 
 class DcServer
@@ -54,6 +44,23 @@ public:
 public:
 	int StartServer();
 	void StopServer();
+	
+	void CollectWorkProc(http_task_t* taskinfo);
+	RegistResult::type RegisterWork(const ClientInfo& clientInfo);
+	void HeartBeatWork(const HeartBeatInfo& heartBeatInfo);
+	
+private:
+	static void S_StartService(void* arg);
+	void StartService();
+	
+private:
+	std::list<dcnode_t> m_node_list;
+	swartz_thread_t* m_hThread;				
+	swartz_sem_t* m_sem; 
+	swartz_bool m_bstop;	
+
+	CMutex m_Manmutex; // 多线程处理任务数的时候需要加锁
+
 };
 
 typedef singleton<DcServer> DCServer;

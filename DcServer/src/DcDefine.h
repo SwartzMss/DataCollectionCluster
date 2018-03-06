@@ -8,8 +8,12 @@
 #include "swartz_thread.h"
 #include "swartz_threadpool.h"
 #include "swartz_types.h"
+#include "swartz_sem.h"
+#include "swartz_mutexEx.h"
 
 #include <unistd.h>
+#include <time.h>  
+#include <sys/types.h>
 
 #include <string>
 #include "writer.h"
@@ -31,15 +35,21 @@
 #include <event2/bufferevent.h>
 #include <event2/thread.h>
 
+#include <list>
 #include <iostream>
 #include <string>
+#include <sstream>
 
 using namespace rapidjson;
+
+#define DC_SERVICE   "/DcCluster/api/v1.0/Service"
 
 typedef enum
 {     
 	DC_NO_ERR  = 0,
-	DC_URL_ERR = 1
+	DC_URL_ERR = 1,
+	DC_BODY_ERR = 2,
+	DC_NO_NODE = 3,
 }DC_HTTP_REPLY;
 
 typedef struct http_task_t
@@ -48,5 +58,18 @@ typedef struct http_task_t
 	 void* usrdata;
 }http_task_t;
 
+typedef struct dcnode_t
+{
+	std::string ip;
+	int port ;
+	long lHeartBeatTime;
+}dcnode_t;
+
+static long DCGetTickCount()
+{
+	struct timespec ts;
+	clock_gettime(CLOCK_MONOTONIC, &ts);
+	return (ts.tv_sec * 1000 + ts.tv_nsec / 1000000);
+}
 
 #endif
