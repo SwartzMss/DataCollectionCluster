@@ -13,11 +13,13 @@ OBJS = $(patsubst %.cpp,%.o,$(SRC))
 
 INCLUDES = -I./ -I./src -I../depend/thrift/include \
 	   -I../depend/tinyxml2/include -I../depend/utils/include \
-	   -I../depend/xlogger/include -I../depend/libevent/include  
+	   -I../depend/xlogger/include -I../depend/libevent/include  \
+	   -I../depend/mq/include
 
 LIBDIR = -Wl,-rpath=./ -lpthread -ldl -L../depend/thrift/lib -lthrift -lthriftnb \
 	 -L../depend/xlogger/lib -llog4cxx -lxlogger -L../depend/utils/lib -lutils \
-	 -L../depend/openssl/lib -lssl -lcrypto -L../depend/libevent/lib -levent -levent_pthreads
+	 -L../depend/openssl/lib -lssl -lcrypto -L../depend/libevent/lib -levent -levent_pthreads \
+	 -L../depend/mq/lib -lmq -lactivemq-cpp
 
 
 all:$(TARGET)
@@ -48,4 +50,5 @@ install:$(TARGET)
 	@install -m 0755 ../depend/openssl/lib/*  $(TARGETDIR)
 	@install -m 0755 ../depend/thrift/lib/*  $(TARGETDIR)
 	@install -m 0755 ../depend/libevent/lib/*  $(TARGETDIR)
+	@install -m 0755 ../depend/mq/lib/*  $(TARGETDIR)
 

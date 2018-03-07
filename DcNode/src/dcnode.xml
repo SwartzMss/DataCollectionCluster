@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8" ?>  
 <config>  
-    <host NodeIp="127.0.0.1" NodePort="6001" ClusterIp="127.0.0.1" ClusterPort="5002" />  
+    <host NodeIp="127.0.0.1" NodePort="6001" ClusterIp="127.0.0.1" ClusterPort="5002"  />  
+	<mq ip="127.0.0.1" port="61616" queue="test"  />  
 </config>  

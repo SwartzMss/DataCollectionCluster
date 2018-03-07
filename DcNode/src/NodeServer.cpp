@@ -1,5 +1,5 @@
 #include "NodeServer.h"
-
+#include "dp.h"
 
 NodeServer::NodeServer(void) :
 m_hThread(NULL),
@@ -17,6 +17,7 @@ NodeServer::~NodeServer(void)
 
 bool RequestHandler::ClusterWork(const std::string& msg) 
 {
+	DP::Instance()->send_message(msg);
 	DC_INFO("ClusterWork %s",msg.c_str());
 	return true;
 }
@@ -31,6 +32,8 @@ int NodeServer::StartServer( NODE_INFO &info)
         DC_ERROR("swartz_sem_create error");
         return SWARTZ_ERR;
     }
+	
+	DP::Instance()->init(info.mqIP,info.mqPort,info.mqQueue);
 	
 	if (SWARTZ_OK != swartz_thread_create(&m_hThread, (void*)S_StartService, this, 0, 0))
 	{
@@ -53,6 +56,7 @@ int NodeServer::StartServer( NODE_INFO &info)
 
 void NodeServer::StopServer()
 {
+
 	m_bstop = SWARTZ_TRUE;
 	//销毁线程池
 	if (NULL != m_hThreadPool)
@@ -80,6 +84,8 @@ void NodeServer::StopServer()
 		swartz_thread_wait(m_hRegisterThread);
 		m_hRegisterThread = NULL;
 	}
+	
+	DP::Instance()->uninit();
 }
 
 void NodeServer::S_StartService(void* arg)
