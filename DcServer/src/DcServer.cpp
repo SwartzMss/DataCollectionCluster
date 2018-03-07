@@ -154,6 +154,26 @@ void DcServer::StopServer()
     }
 }
 
+bool DcServer::ClusterWorkProc(const std::string& ip , const int& port ,const std::string& msg) 
+{	
+	boost::shared_ptr<TSocket> socket(new TSocket(ip.c_str(), port));
+	boost::shared_ptr<TTransport> transport(new TFramedTransport(socket));
+	boost::shared_ptr<TProtocol> protocol(new TBinaryProtocol(transport));
+
+	RequestClient client(protocol);
+	bool bsuccess = false;
+	try 
+	{
+		transport->open();
+		bsuccess = client.ClusterWork(msg);
+		transport->close();
+	}
+	catch(...)
+	{
+		
+	}
+	return bsuccess;
+}
 /*
 {
 	"indexCode":"131000000514",
@@ -191,6 +211,10 @@ void DcServer::CollectWorkProc(http_task_t* taskinfo)
 	const char* szIndexCode =  document["indexCode"].GetString();
 	HTTPServer::Instance()->SendReply(taskinfo, "200 OK",DC_BODY_ERR);
 	delete(req_buf);
+	if(m_node_list.size()>0)
+	{
+		ClusterWorkProc(m_node_list.begin()->ip,m_node_list.begin()->port,szIndexCode);
+	}
 }
 
 

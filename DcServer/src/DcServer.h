@@ -12,6 +12,7 @@
 #include <thrift/transport/TBufferTransports.h>
 
 #include "Regist.h"
+#include "Request.h"
 
 using namespace ::apache::thrift;
 using namespace ::apache::thrift::protocol;
@@ -52,6 +53,8 @@ public:
 private:
 	static void S_StartService(void* arg);
 	void StartService();
+	
+	bool ClusterWorkProc(const std::string& ip , const int& port ,const std::string& msg) ;
 	
 private:
 	std::list<dcnode_t> m_node_list;

@@ -9,6 +9,7 @@ using namespace tinyxml2;
 #include "swartz_singleton.h"
 #include "swartz_init.h"
 #include "swartz_thread.h"
+#include "swartz_sem.h"
 #include "swartz_threadpool.h"
 #include "swartz_types.h"
 
