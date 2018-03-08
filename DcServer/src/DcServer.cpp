@@ -13,8 +13,7 @@ bool RegistHandler::heartbeat(const HeartBeatInfo& heartBeatInfo)
 {
 	DC_INFO("Clinet heartbeat Ip = %s, port =%d ",heartBeatInfo.Ip.c_str(),heartBeatInfo.Port);
 	
-	DCServer::Instance()->HeartBeatWork(heartBeatInfo);
-	return true;
+	return DCServer::Instance()->HeartBeatWork(heartBeatInfo);//必须按照先注册后心跳的顺序,因为注册的时候可以进行一些初始化动作
 }
 
 
@@ -22,12 +21,13 @@ RegistResult::type DcServer::RegisterWork(const ClientInfo& clientInfo)
 {
 	CGuard<CMutex> g(m_Manmutex);
 	swartz_bool nNodeExist = SWARTZ_FALSE;
-	for (std::list<dcnode_t>::iterator itor = m_node_list.begin();itor != m_node_list.end();itor++)
+	for (std::vector<dcnode_t>::iterator itor = m_node_vec.begin();itor != m_node_vec.end();itor++)
 	{
 		if(itor->ip == clientInfo.Ip && itor->port == clientInfo.Port )
 		{
 			itor->lHeartBeatTime = DCGetTickCount();
 			nNodeExist = SWARTZ_TRUE;
+			break;
 		}
 	}
 	if(!nNodeExist)
@@ -36,23 +36,26 @@ RegistResult::type DcServer::RegisterWork(const ClientInfo& clientInfo)
 		node.ip = clientInfo.Ip;
 		node.port = clientInfo.Port;
 		node.lHeartBeatTime = DCGetTickCount();
-		DCServer::Instance()->m_node_list.push_back(node);
+		DCServer::Instance()->m_node_vec.push_back(node);
 	}
+	/*这里不区分是崩溃重启之后注册还是第一次注册了,应用层可以在这里做对节点的初始化操作*/
 	return RegistResult::SUCCESS;
 }
 
-void DcServer::HeartBeatWork(const HeartBeatInfo& heartBeatInfo)
+bool DcServer::HeartBeatWork(const HeartBeatInfo& heartBeatInfo)
 {
+	bool bret = false;
 	CGuard<CMutex> g(m_Manmutex);
-	
-	for (std::list<dcnode_t>::iterator itor = m_node_list.begin();itor != m_node_list.end();itor++)
+	for (std::vector<dcnode_t>::iterator itor = m_node_vec.begin();itor != m_node_vec.end();itor++)
 	{
 		if( itor->ip == heartBeatInfo.Ip && itor->port == heartBeatInfo.Port )
 		{
 			itor->lHeartBeatTime = DCGetTickCount();
+			bret = true;
 			break;
 		}
 	}
+	return bret;
 }
 
 DcServer::DcServer(void):
@@ -112,11 +115,11 @@ void DcServer::StartService()
 			long lCheckTime = DCGetTickCount();
 			CGuard<CMutex> g(m_Manmutex);
 
-			for (std::list<dcnode_t>::iterator itor = m_node_list.begin();itor != m_node_list.end();)
+			for (std::vector<dcnode_t>::iterator itor = m_node_vec.begin();itor != m_node_vec.end();)
 			{
-				if(lCheckTime - itor->lHeartBeatTime > 60 )
+				if(lCheckTime - itor->lHeartBeatTime > 60*1000 )
 				{
-					itor = DCServer::Instance()->m_node_list.erase(itor);
+					itor = DCServer::Instance()->m_node_vec.erase(itor);
 					continue;
 				}
 				else
@@ -125,7 +128,7 @@ void DcServer::StartService()
 					++itor;
 				}
 			}	
-			DC_INFO("current Clinet node size = %d ",m_node_list.size());
+			DC_INFO("current Clinet node size = %d ",m_node_vec.size());
 		}
         swartz_sem_wait(m_sem, 45*1000);
         if (m_bstop)
@@ -161,7 +164,7 @@ bool DcServer::ClusterWorkProc(const std::string& ip , const int& port ,const st
 	boost::shared_ptr<TProtocol> protocol(new TBinaryProtocol(transport));
 
 	RequestClient client(protocol);
-	bool bsuccess = false;
+	bool bsuccess = true;
 	try 
 	{
 		transport->open();
@@ -170,7 +173,7 @@ bool DcServer::ClusterWorkProc(const std::string& ip , const int& port ,const st
 	}
 	catch(...)
 	{
-		
+		bsuccess = false;
 	}
 	return bsuccess;
 }
@@ -209,12 +212,55 @@ void DcServer::CollectWorkProc(http_task_t* taskinfo)
 	}
 
 	const char* szIndexCode =  document["indexCode"].GetString();
-	HTTPServer::Instance()->SendReply(taskinfo, "200 OK",DC_BODY_ERR);
-	delete(req_buf);
-	if(m_node_list.size()>0)
+	if(szIndexCode == NULL)
 	{
-		ClusterWorkProc(m_node_list.begin()->ip,m_node_list.begin()->port,szIndexCode);
+		HTTPServer::Instance()->SendReply(taskinfo, "Body Data Error",DC_BODY_ERR);
 	}
+	
+	static int pickNum = 0;
+	dcnode_t node ;
+	int node_size = 0 ;
+	{
+		//平均调度
+		CGuard<CMutex> g(m_Manmutex);
+		node_size = m_node_vec.size();
+		if(node_size > 0)
+		{
+			pickNum = pickNum%node_size;
+			node = m_node_vec[pickNum++];
+		}
+	}
+
+	if( node_size > 0) 
+	{
+		if( ClusterWorkProc(node.ip,node.port,szIndexCode))
+		{
+
+			HTTPServer::Instance()->SendReply(taskinfo, "200 OK",DC_NO_ERR);
+		}
+		else
+		{
+			{
+				CGuard<CMutex> g(m_Manmutex);
+				for (std::vector<dcnode_t>::iterator itor = m_node_vec.begin();itor != m_node_vec.end();itor++)
+				{
+					if( itor->ip == node.ip&& itor->port == node.port )
+					{
+						m_node_vec.erase(itor);
+						break;
+					}
+				}
+			}
+			HTTPServer::Instance()->SendReply(taskinfo, "DCNODE ERROR",DC_NODE_ERR);
+		}
+	}
+	else
+	{
+		HTTPServer::Instance()->SendReply(taskinfo, "NO AVAILABLE Node",DC_NO_NODE);
+	}
+
+	delete(req_buf);
 }
+
 
 

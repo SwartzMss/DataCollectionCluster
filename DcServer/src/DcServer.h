@@ -48,7 +48,7 @@ public:
 	
 	void CollectWorkProc(http_task_t* taskinfo);
 	RegistResult::type RegisterWork(const ClientInfo& clientInfo);
-	void HeartBeatWork(const HeartBeatInfo& heartBeatInfo);
+	bool HeartBeatWork(const HeartBeatInfo& heartBeatInfo);
 	
 private:
 	static void S_StartService(void* arg);
@@ -57,7 +57,7 @@ private:
 	bool ClusterWorkProc(const std::string& ip , const int& port ,const std::string& msg) ;
 	
 private:
-	std::list<dcnode_t> m_node_list;
+	std::vector<dcnode_t> m_node_vec;
 	swartz_thread_t* m_hThread;				
 	swartz_sem_t* m_sem; 
 	swartz_bool m_bstop;	

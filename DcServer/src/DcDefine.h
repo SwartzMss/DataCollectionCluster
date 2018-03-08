@@ -37,6 +37,7 @@
 
 #include <list>
 #include <iostream>
+#include <vector>
 #include <string>
 #include <sstream>
 
@@ -50,6 +51,7 @@ typedef enum
 	DC_URL_ERR = 1,
 	DC_BODY_ERR = 2,
 	DC_NO_NODE = 3,
+	DC_NODE_ERR = 4,
 }DC_HTTP_REPLY;
 
 typedef struct http_task_t

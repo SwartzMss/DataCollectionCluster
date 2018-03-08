@@ -185,6 +185,7 @@ void NodeServer::SendHeartBeat()
 		{
 			if(HeartBeatWork()== SWARTZ_FALSE)
 			{
+				m_bregister_ok = SWARTZ_FALSE;
 				DC_ERROR("send heartbeat %s:%d failed", m_nodeInfo.ClusterIp.c_str(), m_nodeInfo.ClusterPort);
 			}
 			else
